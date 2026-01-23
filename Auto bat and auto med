@@ -1,0 +1,216 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LP = Players.LocalPlayer
+
+-- --- CONFIGURATION ---
+local TARGET_GAME_ID = 109983668079237 
+local CURRENT_GAME_ID = game.PlaceId
+
+-- --- GAME CHECK ---
+if CURRENT_GAME_ID ~= TARGET_GAME_ID then
+    local ErrorGui = Instance.new("ScreenGui")
+    ErrorGui.Name = "DLXR_Error_GUI"
+    ErrorGui.Parent = (gethui and gethui()) or game:GetService("CoreGui")
+    local ErrorFrame = Instance.new("Frame")
+    ErrorFrame.Size = UDim2.new(0, 260, 0, 100)
+    ErrorFrame.Position = UDim2.new(0.5, -130, 0.4, -50)
+    ErrorFrame.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    ErrorFrame.Parent = ErrorGui
+    Instance.new("UICorner", ErrorFrame)
+    local ErrorText = Instance.new("TextLabel")
+    ErrorText.Size = UDim2.new(1, 0, 1, 0)
+    ErrorText.Text = "ACCESS DENIED\nIncorrect Game ID"
+    ErrorText.TextColor3 = Color3.new(1, 1, 1)
+    ErrorText.Font = Enum.Font.GothamBold
+    ErrorText.TextSize = 14
+    ErrorText.BackgroundTransparency = 1
+    ErrorText.Parent = ErrorFrame
+    task.wait(3)
+    ErrorGui:Destroy()
+    return 
+end
+
+-- --- GUI SETUP ---
+local DLXR_GUI = Instance.new("ScreenGui")
+DLXR_GUI.Name = "DLXR_Master_GUI"
+DLXR_GUI.Parent = (gethui and gethui()) or game:GetService("CoreGui")
+DLXR_GUI.ResetOnSpawn = false
+
+-- Draggable Toggle Square (Left Side)
+local ControlContainer = Instance.new("Frame")
+ControlContainer.Size = UDim2.new(0, 65, 0, 40)
+ControlContainer.Position = UDim2.new(0, 10, 0.5, -20)
+ControlContainer.BackgroundTransparency = 1
+ControlContainer.Parent = DLXR_GUI
+
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Size = UDim2.new(0, 40, 0, 40)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 85, 255)
+ToggleBtn.Text = "D"
+ToggleBtn.TextColor3 = Color3.new(1, 1, 1)
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.TextSize = 20
+ToggleBtn.Parent = ControlContainer
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 8)
+
+local ToggleDrag = Instance.new("TextButton")
+ToggleDrag.Size = UDim2.new(0, 12, 0, 40)
+ToggleDrag.Position = UDim2.new(0, 45, 0, 0)
+ToggleDrag.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+ToggleDrag.Text = ""
+ToggleDrag.Parent = ControlContainer
+Instance.new("UICorner", ToggleDrag).CornerRadius = UDim.new(0, 4)
+
+-- Main Menu
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 200, 0, 280)
+MainFrame.Position = UDim2.new(0.5, -100, 0.4, -140)
+MainFrame.BackgroundColor3 = Color3.fromRGB(0, 85, 255)
+MainFrame.Visible = false
+MainFrame.Active = true
+MainFrame.Parent = DLXR_GUI
+Instance.new("UICorner", MainFrame)
+
+-- --- NEW: DRAG HANDLE (BOTTOM RIGHT) ---
+local MainDragHandle = Instance.new("TextButton")
+MainDragHandle.Size = UDim2.new(0, 15, 0, 15)
+MainDragHandle.Position = UDim2.new(1, -20, 1, -20) -- Bottom Right
+MainDragHandle.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
+MainDragHandle.Text = ""
+MainDragHandle.Parent = MainFrame
+Instance.new("UICorner", MainDragHandle)
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.Text = "DLXR PVP GUI"
+Title.TextColor3 = Color3.new(1, 1, 1)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 16
+Title.BackgroundTransparency = 1
+Title.Parent = MainFrame
+
+-- Menu Buttons
+local function addBtn(text, pos)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(0.85, 0, 0, 35)
+    b.Position = pos
+    b.BackgroundColor3 = Color3.new(1, 1, 1)
+    b.Text = text
+    b.TextColor3 = Color3.fromRGB(0, 85, 255)
+    b.Font = Enum.Font.GothamBold
+    b.TextSize = 11
+    b.Parent = MainFrame
+    Instance.new("UICorner", b)
+    return b
+end
+
+local AutoBatBtn = addBtn("AUTO-BAT: OFF", UDim2.new(0.075, 0, 0.15, 0))
+local MedusaBtn = addBtn("EXECUTE MEDUSA", UDim2.new(0.075, 0, 0.3, 0))
+
+-- Slider UI
+local SliderLabel = Instance.new("TextLabel")
+SliderLabel.Size = UDim2.new(1, 0, 0, 20)
+SliderLabel.Position = UDim2.new(0, 0, 0.48, 0)
+SliderLabel.Text = "SPEED: 16"
+SliderLabel.TextColor3 = Color3.new(1, 1, 1)
+SliderLabel.BackgroundTransparency = 1
+SliderLabel.Font = Enum.Font.GothamBold
+SliderLabel.TextSize = 12
+SliderLabel.Parent = MainFrame
+
+local SliderBG = Instance.new("Frame")
+SliderBG.Size = UDim2.new(0.8, 0, 0, 6)
+SliderBG.Position = UDim2.new(0.1, 0, 0.58, 0)
+SliderBG.BackgroundColor3 = Color3.fromRGB(0, 50, 150)
+SliderBG.Parent = MainFrame
+Instance.new("UICorner", SliderBG)
+
+local SliderMain = Instance.new("Frame")
+SliderMain.Size = UDim2.new(0, 15, 0, 15)
+SliderMain.Position = UDim2.new(0, 0, 0.5, -7)
+SliderMain.BackgroundColor3 = Color3.new(1, 1, 1)
+SliderMain.Parent = SliderBG
+Instance.new("UICorner", SliderMain)
+
+local DiscordBtn = addBtn("DISCORD", UDim2.new(0.075, 0, 0.75, 0))
+
+-- --- DRAG LOGIC ---
+local function setupDrag(frame, handle)
+    local dragToggle, dragStart, startPos
+    handle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragToggle = true; dragStart = input.Position; startPos = frame.Position
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragToggle and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+    UserInputService.InputEnded:Connect(function() dragToggle = false end)
+end
+
+-- Apply drag only to the handles
+setupDrag(ControlContainer, ToggleDrag)
+setupDrag(MainFrame, MainDragHandle) -- Main UI only moves with bottom-right square
+
+-- --- SPEED SLIDER LOGIC ---
+local speedValue = 16
+local isSliding = false
+local function updateSlider(input)
+    local pos = math.clamp((input.Position.X - SliderBG.AbsolutePosition.X) / SliderBG.AbsoluteSize.X, 0, 1)
+    SliderMain.Position = UDim2.new(pos, -7, 0.5, -7)
+    speedValue = math.floor(16 + (pos * 34)) -- Range 16 to 50
+    SliderLabel.Text = "SPEED: " .. tostring(speedValue)
+end
+SliderMain.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then isSliding = true end end)
+UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then isSliding = false end end)
+UserInputService.InputChanged:Connect(function(i) if isSliding and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then updateSlider(i) end end)
+
+RunService.Stepped:Connect(function()
+    if LP.Character and LP.Character:FindFirstChildOfClass("Humanoid") then
+        LP.Character.Humanoid.WalkSpeed = speedValue
+    end
+end)
+
+-- --- BUTTONS ---
+ToggleBtn.MouseButton1Click:Connect(function() MainFrame.Visible = not MainFrame.Visible end)
+
+local autoBatOn = false
+AutoBatBtn.MouseButton1Click:Connect(function()
+    autoBatOn = not autoBatOn
+    AutoBatBtn.Text = "AUTO-BAT: " .. (autoBatOn and "ON" or "OFF")
+    AutoBatBtn.BackgroundColor3 = autoBatOn and Color3.fromRGB(200, 255, 200) or Color3.new(1, 1, 1)
+    task.spawn(function()
+        while autoBatOn do
+            local char = LP.Character
+            local bat = char and (char:FindFirstChild("Bat") or LP.Backpack:FindFirstChild("Bat"))
+            if bat and char:FindFirstChildOfClass("Humanoid") then
+                if bat.Parent ~= char then char.Humanoid:EquipTool(bat) end
+                bat:Activate()
+            end
+            task.wait(0.1)
+        end
+    end)
+end)
+
+MedusaBtn.MouseButton1Click:Connect(function()
+    local char = LP.Character
+    local head = char and (char:FindFirstChild("Medusa's Head") or LP.Backpack:FindFirstChild("Medusa's Head"))
+    if head and char:FindFirstChildOfClass("Humanoid") then
+        char.Humanoid:EquipTool(head)
+        task.wait(0.05)
+        head:Activate()
+        task.wait(0.1)
+        char.Humanoid:UnequipTools()
+    end
+end)
+
+DiscordBtn.MouseButton1Click:Connect(function()
+    if setclipboard then setclipboard("dsc.gg/dlxr") end
+    DiscordBtn.Text = "COPIED!"
+    task.wait(2)
+    DiscordBtn.Text = "DISCORD"
+end)
